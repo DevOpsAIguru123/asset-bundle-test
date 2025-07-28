@@ -8,30 +8,25 @@ on:
 
 jobs:
   deploy:
-    name: 'Deploy app resource'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@v0.261.0
-
-      - name: Configure Databricks PAT
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-        run: |
-          databricks configure --token --host $DATABRICKS_HOST --token $DATABRICKS_TOKEN
-
       - name: Validate Databricks Bundle
         run: databricks bundle validate
         env:
           DATABRICKS_BUNDLE_ENV: development
-
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       - name: Deploy Databricks Bundle
         run: databricks bundle deploy
         env:
           DATABRICKS_BUNDLE_ENV: development
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       - name: Run Databricks Bundle
         run: databricks bundle run demo_serverless_job
         env:
           DATABRICKS_BUNDLE_ENV: development
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
