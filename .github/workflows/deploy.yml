@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    environment: databricks
+  validate:
     runs-on: ubuntu-latest
+    environment: databricks
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@v0.261.0
@@ -19,12 +19,28 @@ jobs:
           DATABRICKS_BUNDLE_ENV: development
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: databricks
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@v0.261.0
       - name: Deploy Databricks Bundle
         run: databricks bundle deploy
         env:
           DATABRICKS_BUNDLE_ENV: development
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+  run_job:
+    runs-on: ubuntu-latest
+    environment: databricks
+    needs: deploy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@v0.261.0
       - name: Run Databricks Bundle
         run: databricks bundle run demo_serverless_job
         env:
