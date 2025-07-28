@@ -8,6 +8,7 @@ on:
 
 jobs:
   deploy:
+    environment: databricks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
