@@ -6,7 +6,7 @@ include:
 
 targets:
   dev:
-    mode: development
+    mode: production
     workspace:
       host: https://adb-2645009711437986.6.azuredatabricks.net
       root_path: /Workspace/Shared/dev
