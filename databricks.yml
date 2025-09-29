@@ -9,7 +9,7 @@ targets:
     mode: development
     workspace:
       host: https://adb-2645009711437986.6.azuredatabricks.net
-      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com/dev
+      root_path: /Workspace/Shared/dev
     variables:
       environment_message: "Hello World Dev"
   
@@ -17,7 +17,7 @@ targets:
     mode: production
     workspace:
       host: https://adb-3711350721830400.0.azuredatabricks.net # Update this if you have a separate test workspace
-      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com/test
+      root_path: /Workspace/Shared/test
     variables:
       environment_message: "Hello World Test"
 
