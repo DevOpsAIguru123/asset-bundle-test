@@ -15,13 +15,13 @@ jobs:
       matrix:
         include:
           - target: dev
-            github_env: development
-            host: ${{ secrets.DEV_DATABRICKS_HOST }}
-            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+            github_env: dev
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
-            github_env: production
-            host: ${{ secrets.TEST_DATABRICKS_HOST }}
-            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+            github_env: test
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     # Control which matrix job runs based on the event trigger
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
@@ -46,13 +46,13 @@ jobs:
       matrix: # The matrix must be identical to the one in the 'validate' job
         include:
           - target: dev
-            github_env: development
-            host: ${{ secrets.DEV_DATABRICKS_HOST }}
-            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+            github_env: dev
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
-            github_env: production
-            host: ${{ secrets.TEST_DATABRICKS_HOST }}
-            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+            github_env: test
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
@@ -76,13 +76,13 @@ jobs:
       matrix: # The matrix must also be identical here
         include:
           - target: dev
-            github_env: development
-            host: ${{ secrets.DEV_DATABRICKS_HOST }}
-            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+            github_env: dev
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
-            github_env: production
-            host: ${{ secrets.TEST_DATABRICKS_HOST }}
-            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+            github_env: test
+            host: ${{ secrets.DATABRICKS_HOST }}
+            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
