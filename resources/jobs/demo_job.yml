@@ -12,7 +12,7 @@ resources:
       tasks:
         - task_key: demo_task
           spark_python_task:
-            python_file: "../demo.py"
+            python_file: "../src/demo.py"
 
           # The key that references an environment spec in this job
           environment_key: default
@@ -26,3 +26,6 @@ resources:
           spec:
             client: "3"
             dependencies: []
+            # Environment variables that will be available to the Python script
+            environment_variables:
+              ENVIRONMENT_MESSAGE: ${var.environment_message}

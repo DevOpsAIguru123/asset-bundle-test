@@ -5,19 +5,26 @@ include:
   - resources/*.yml
 
 targets:
-  development:
+  dev:
     mode: development
     workspace:
-      host: https://dbc-0a827284-a8d1.cloud.databricks.com/
-      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com
+      host: https://adb-3711350721830400.0.azuredatabricks.net
+      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com/dev
+    variables:
+      environment_message: "Hello World Dev"
   
-  production:
+  test:
     mode: production
     workspace:
-      host: https://dbc-0a827284-a8d1.cloud.databricks.com/
-      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com
+      host: https://adb-3711350721830400.0.azuredatabricks.net  # Update this if you have a separate test workspace
+      root_path: /Workspace/Users/vinoddevopscloud99@gmail.com/test
+    variables:
+      environment_message: "Hello World Test"
 
 variables:
   python_file_path:
     description: "Path to the Python file"
     default: "./demo.py"
+  environment_message:
+    description: "Environment-specific greeting message"
+    default: "Hello World Default"

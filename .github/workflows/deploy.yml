@@ -4,46 +4,96 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
+  # This job validates the bundle for the target environment
   validate:
     runs-on: ubuntu-latest
-    environment: databricks
+    strategy:
+      # Define a matrix of environments
+      matrix:
+        include:
+          - target: dev
+            github_env: development
+            host: ${{ secrets.DEV_DATABRICKS_HOST }}
+            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+          - target: test
+            github_env: production
+            host: ${{ secrets.TEST_DATABRICKS_HOST }}
+            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+
+    # Control which matrix job runs based on the event trigger
+    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
+
+    environment: ${{ matrix.github_env }} # Use GitHub environments for rules/secrets
+
     steps:
       - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@v0.261.0
-      - name: Validate Databricks Bundle
-        run: databricks bundle validate
-        env:
-          DATABRICKS_BUNDLE_ENV: development
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      - uses: databricks/setup-cli@main
 
+      - name: Validate Bundle for ${{ matrix.target }}
+        run: databricks bundle validate -t ${{ matrix.target }}
+        env:
+          DATABRICKS_HOST: ${{ matrix.host }}
+          DATABRICKS_TOKEN: ${{ matrix.token }}
+
+  # This job deploys the bundle to the target environment
   deploy:
     runs-on: ubuntu-latest
-    environment: databricks
-    needs: validate
+    needs: validate # Depends on the corresponding 'validate' job
+    strategy:
+      matrix: # The matrix must be identical to the one in the 'validate' job
+        include:
+          - target: dev
+            github_env: development
+            host: ${{ secrets.DEV_DATABRICKS_HOST }}
+            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+          - target: test
+            github_env: production
+            host: ${{ secrets.TEST_DATABRICKS_HOST }}
+            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+
+    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
+
+    environment: ${{ matrix.github_env }}
+
     steps:
       - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@v0.261.0
-      - name: Deploy Databricks Bundle
-        run: databricks bundle deploy
-        env:
-          DATABRICKS_BUNDLE_ENV: development
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      - uses: databricks/setup-cli@main
 
+      - name: Deploy Bundle to ${{ matrix.target }}
+        run: databricks bundle deploy -t ${{ matrix.target }}
+        env:
+          DATABRICKS_HOST: ${{ matrix.host }}
+          DATABRICKS_TOKEN: ${{ matrix.token }}
+
+  # This job runs the job after deployment
   run_job:
     runs-on: ubuntu-latest
-    environment: databricks
-    needs: deploy
+    needs: deploy # Depends on the corresponding 'deploy' job
+    strategy:
+      matrix: # The matrix must also be identical here
+        include:
+          - target: dev
+            github_env: development
+            host: ${{ secrets.DEV_DATABRICKS_HOST }}
+            token: ${{ secrets.DEV_DATABRICKS_TOKEN }}
+          - target: test
+            github_env: production
+            host: ${{ secrets.TEST_DATABRICKS_HOST }}
+            token: ${{ secrets.TEST_DATABRICKS_TOKEN }}
+
+    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
+
+    environment: ${{ matrix.github_env }}
+
     steps:
       - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@v0.261.0
-      - name: Run Databricks Bundle
-        run: databricks bundle run demo_serverless_job
+      - uses: databricks/setup-cli@main
+
+      - name: Run Job in ${{ matrix.target }}
+        run: databricks bundle run demo_serverless_job -t ${{ matrix.target }}
         env:
-          DATABRICKS_BUNDLE_ENV: development
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: ${{ matrix.host }}
+          DATABRICKS_TOKEN: ${{ matrix.token }}
