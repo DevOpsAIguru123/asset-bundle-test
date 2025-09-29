@@ -16,12 +16,8 @@ jobs:
         include:
           - target: dev
             github_env: dev
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
             github_env: test
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     # Control which matrix job runs based on the event trigger
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
@@ -35,8 +31,8 @@ jobs:
       - name: Validate Bundle for ${{ matrix.target }}
         run: databricks bundle validate -t ${{ matrix.target }}
         env:
-          DATABRICKS_HOST: ${{ matrix.host }}
-          DATABRICKS_TOKEN: ${{ matrix.token }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
   # This job deploys the bundle to the target environment
   deploy:
@@ -47,12 +43,8 @@ jobs:
         include:
           - target: dev
             github_env: dev
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
             github_env: test
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
@@ -65,8 +57,8 @@ jobs:
       - name: Deploy Bundle to ${{ matrix.target }}
         run: databricks bundle deploy -t ${{ matrix.target }}
         env:
-          DATABRICKS_HOST: ${{ matrix.host }}
-          DATABRICKS_TOKEN: ${{ matrix.token }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
   # This job runs the job after deployment
   run_job:
@@ -77,12 +69,8 @@ jobs:
         include:
           - target: dev
             github_env: dev
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
           - target: test
             github_env: test
-            host: ${{ secrets.DATABRICKS_HOST }}
-            token: ${{ secrets.DATABRICKS_TOKEN }}
 
     if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
@@ -95,5 +83,5 @@ jobs:
       - name: Run Job in ${{ matrix.target }}
         run: databricks bundle run demo_serverless_job -t ${{ matrix.target }}
         env:
-          DATABRICKS_HOST: ${{ matrix.host }}
-          DATABRICKS_TOKEN: ${{ matrix.token }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
