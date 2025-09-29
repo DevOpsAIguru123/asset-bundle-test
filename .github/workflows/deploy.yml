@@ -19,8 +19,7 @@ jobs:
           - target: test
             github_env: test
 
-    # Control which matrix job runs based on the event trigger
-    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
+    # Matrix jobs will run based on step-level conditions
 
     environment: ${{ matrix.github_env }} # Use GitHub environments for rules/secrets
 
@@ -46,7 +45,6 @@ jobs:
           - target: test
             github_env: test
 
-    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
     environment: ${{ matrix.github_env }}
 
@@ -55,6 +53,7 @@ jobs:
       - uses: databricks/setup-cli@main
 
       - name: Deploy Bundle to ${{ matrix.target }}
+        if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
         run: databricks bundle deploy -t ${{ matrix.target }}
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
@@ -72,7 +71,6 @@ jobs:
           - target: test
             github_env: test
 
-    if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
 
     environment: ${{ matrix.github_env }}
 
@@ -81,6 +79,7 @@ jobs:
       - uses: databricks/setup-cli@main
 
       - name: Run Job in ${{ matrix.target }}
+        if: (github.ref == 'refs/heads/main' && matrix.target == 'dev') || (github.event_name == 'workflow_dispatch')
         run: databricks bundle run demo_serverless_job -t ${{ matrix.target }}
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
