@@ -14,47 +14,40 @@ fi
 
 echo "Using Nexus URL: $NEXUS_URL" >> "$LOG_FILE" 2>&1
 
-# Helper to write Rprofile.site if a given etc dir exists
-write_rprofile_site() {
-  local etc_dir="$1"
-  if [[ -d "$etc_dir" ]]; then
-    echo "Writing ${etc_dir}/Rprofile.site" >> "$LOG_FILE" 2>&1
-    cat << EOF > "${etc_dir}/Rprofile.site"
-local({
-  options(
-    repos = c(
-      CRAN = "${NEXUS_URL}"
-    )
-  )
-})
-EOF
-  else
-    echo "Directory ${etc_dir} does not exist, skipping." >> "$LOG_FILE" 2>&1
-  fi
-}
-
-# 1) Use the R_HOME from this environment (what your notebook reports)
+# R HOME (for the R used by notebooks)
 R_HOME=$(R RHOME 2>/dev/null || true)
 echo "Detected R_HOME = ${R_HOME}" >> "$LOG_FILE" 2>&1
-if [[ -n "$R_HOME" ]]; then
-  write_rprofile_site "${R_HOME}/etc"
+
+ETC_DIR="${R_HOME}/etc"
+if [[ -d "$ETC_DIR" ]]; then
+  echo "Writing ${ETC_DIR}/Rprofile.site" >> "$LOG_FILE" 2>&1
+
+  # This runs on every R session start, AFTER all startup scripts
+  cat << 'EOF' > "${ETC_DIR}/Rprofile.site"
+nexus_repo <- Sys.getenv("NEXUS_R_REPO")
+
+if (nzchar(nexus_repo)) {
+  .First <- function() {
+    # This executes after R has started, overriding any earlier repo setting
+    options(repos = c(CRAN = nexus_repo))
+  }
+}
+EOF
+else
+  echo "ETC_DIR ${ETC_DIR} does not exist, skipping Rprofile.site." >> "$LOG_FILE" 2>&1
 fi
 
-# 2) Also try the common Databricks paths, just in case
-write_rprofile_site "/usr/lib/R/etc"
-write_rprofile_site "/databricks/spark/R/lib/R/etc"
+# Also write user-level .Rprofile as a backup
+cat << 'EOF' > /root/.Rprofile
+nexus_repo <- Sys.getenv("NEXUS_R_REPO")
 
-# 3) User-level .Rprofile as a backup
-cat << EOF > /root/.Rprofile
-local({
-  options(
-    repos = c(
-      CRAN = "${NEXUS_URL}"
-    )
-  )
-})
+if (nzchar(nexus_repo)) {
+  .First <- function() {
+    options(repos = c(CRAN = nexus_repo))
+  }
+}
 EOF
+
 cp /root/.Rprofile /databricks/driver/.Rprofile 2>/dev/null || true
 echo "Wrote /root/.Rprofile and /databricks/driver/.Rprofile" >> "$LOG_FILE" 2>&1
-
 echo "=== R Nexus init finished ===" >> "$LOG_FILE" 2>&1
