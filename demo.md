@@ -1,27 +1,31 @@
 #!/bin/bash
-# /dbfs/databricks/init/r-nexus-repo.sh
-# Dynamically inject Nexus URL into Rprofile.site using Spark env variable.
+# dbfs:/databricks/init/r-nexus-repo.sh
 
-# Pull Nexus URL from Spark environment
+LOG_FILE="/databricks/driver/r-nexus-init.log"
+echo "=== R Nexus init starting ===" >> "$LOG_FILE" 2>&1
+echo "Env NEXUS_R_REPO = ${NEXUS_R_REPO}" >> "$LOG_FILE" 2>&1
+
 NEXUS_URL="${NEXUS_R_REPO}"
 
-# Fallback if not set
 if [[ -z "$NEXUS_URL" ]]; then
-  echo "WARNING: NEXUS_R_REPO is not set. R will use default CRAN mirror."
+  echo "NEXUS_R_REPO is empty; leaving default CRAN mirror." >> "$LOG_FILE" 2>&1
   exit 0
 fi
 
-echo "Configuring R to use Nexus CRAN repo: $NEXUS_URL"
+echo "Configuring R to use Nexus: $NEXUS_URL" >> "$LOG_FILE" 2>&1
 
-# Create Rprofile.site on driver
-cat << EOF > /databricks/driver/Rprofile.site
-options(
-  repos = c(
-    CRAN = "$NEXUS_URL"
-  )
-)
+# Create driver-level .Rprofile that R will auto-load
+cat << EOF > /databricks/driver/.Rprofile
+nexus <- Sys.getenv("NEXUS_R_REPO")
+if (nzchar(nexus)) {
+  options(repos = c(CRAN = nexus))
+} else {
+  # Fallback to default
+  options(repos = c(CRAN = "https://cloud.r-project.org"))
+}
 EOF
 
-# Copy to worker nodes as well
-cp /databricks/driver/Rprofile.site /usr/lib/R/etc/Rprofile.site 2>/dev/null || true
-cp /databricks/driver/Rprofile.site /databricks/spark/R/lib/R/etc/Rprofile.site 2>/dev/null || true
+# Also copy to root home so workers / non-interactive R sessions can see it
+cp /databricks/driver/.Rprofile /root/.Rprofile 2>/dev/null || true
+
+echo "R Nexus .Rprofile written." >> "$LOG_FILE" 2>&1
